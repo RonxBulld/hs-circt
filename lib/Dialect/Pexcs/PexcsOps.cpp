@@ -18,29 +18,14 @@ using namespace circt;
 using namespace circt::pexcs;
 
 //===----------------------------------------------------------------------===//
-// Map Operation
+// LUT Operations
 //===----------------------------------------------------------------------===//
 
-LogicalResult PexcsMapOp::verify() {
-  // Verify that the mapper function exists and has compatible types
-  return success();
-}
-
-//===----------------------------------------------------------------------===//
-// Reduce Operation
-//===----------------------------------------------------------------------===//
-
-LogicalResult PexcsReduceOp::verify() {
-  // Verify that the reducer function exists and has compatible types
-  return success();
-}
-
-//===----------------------------------------------------------------------===//
-// Filter Operation
-//===----------------------------------------------------------------------===//
-
-LogicalResult PexcsFilterOp::verify() {
-  // Verify that the predicate function exists and has compatible types
+LogicalResult PexcsLut6Op::verify() {
+  // Verify 6-input LUT has valid INIT value
+  // For LUT6, INIT must be a 64-bit value
+  uint64_t initValue = getINIT();
+  // No specific validation needed for now since any 64-bit value is valid
   return success();
 }
 

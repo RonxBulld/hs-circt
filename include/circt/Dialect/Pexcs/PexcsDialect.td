@@ -23,8 +23,6 @@ def PexcsDialect : Dialect {
     structures that are commonly used in hardware design and optimization.
   }];
 
-  let useDefaultTypePrinterParser = 1;
-  let useDefaultAttributePrinterParser = 1;
   let cppNamespace = "::circt::pexcs";
 }
 

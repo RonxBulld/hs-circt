@@ -7,7 +7,9 @@ add_circt_dialect_library(CIRCTPexcs
   ${CIRCT_MAIN_INCLUDE_DIR}/circt/Dialect/Pexcs
 
   DEPENDS
-  CIRCTPexcsIncGen
+  PexcsEnumsIncGen
+  PexcsAttributesIncGen
+  PexcsOpsIncGen
 
   LINK_COMPONENTS
   Support

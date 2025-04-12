@@ -107,6 +107,8 @@ $ cd circt
 $ mkdir build
 $ cd build
 $ cmake -G Ninja .. \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DMLIR_DIR=$PWD/../llvm/build/lib/cmake/mlir \
     -DLLVM_DIR=$PWD/../llvm/build/lib/cmake/llvm \
     -DLLVM_ENABLE_ASSERTIONS=ON \

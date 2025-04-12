@@ -17,17 +17,22 @@ class PexcsType<string name, string typeMnemonic, list<Trait> traits = []>
   let mnemonic = typeMnemonic;
 }
 
-def PexcsUI2Type : PexcsType<"UI2", "ui2"> {
-  let summary = "A 2-bit unsigned integer type";
+def PexcsOperandType : PexcsType<"Operand", "operand"> {
+  let summary = "A 16-bit structured operand type for Pexcs dialect";
   let description = [{
-    A 2-bit unsigned integer type used in the Pexcs dialect.
-  }];
-}
-
-def PexcsUI4Type : PexcsType<"UI4", "ui4"> {
-  let summary = "A 4-bit unsigned integer type";
-  let description = [{
-    A 4-bit unsigned integer type used in the Pexcs dialect.
+    A 16-bit structured operand type used in the Pexcs dialect.
+    
+    高3bit表示寻址目标空间：
+    - 0: 立即数
+    - 1: 设计状态存储器空间
+    - 2: 全局输入存储器空间
+    - 3: 内存输出寄存器空间
+    - 4: 流水线后端单元空间
+    - 5: 互联网络空间
+    
+    低13bit表示立即数值或者寻址的地址。
+    
+    This type is used for operands in LUT6 and CEV instructions.
   }];
 }
 

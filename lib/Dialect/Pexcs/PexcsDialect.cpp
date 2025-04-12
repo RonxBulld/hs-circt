@@ -9,6 +9,9 @@
 // clang-format off
 #include "circt/Dialect/Pexcs/PexcsDialect.h"
 #include "circt/Dialect/Pexcs/PexcsOps.h"
+#include "circt/Dialect/Pexcs/PexcsTypes.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/DialectImplementation.h"
 // clang-format on
 
 using namespace mlir;
