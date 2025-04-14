@@ -24,6 +24,15 @@ def PexcsDialect : Dialect {
   }];
 
   let cppNamespace = "::circt::pexcs";
+  
+
+  let extraClassDeclaration = [{
+    /// Register all HW types.
+    void registerTypes();
+
+    /// Register all PEXCS operations.
+    void registerOperations();
+  }];
 }
 
 #endif // CIRCT_DIALECT_PEXCS_PEXCSDIALECT_TD 

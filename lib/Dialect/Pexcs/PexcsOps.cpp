@@ -18,6 +18,13 @@ using namespace circt;
 using namespace circt::pexcs;
 
 //===----------------------------------------------------------------------===//
+// Tablegen Generated Logic
+//===----------------------------------------------------------------------===//
+
+#define GET_OP_CLASSES
+#include "circt/Dialect/Pexcs/Pexcs.cpp.inc"
+
+//===----------------------------------------------------------------------===//
 // LUT Operations
 //===----------------------------------------------------------------------===//
 
@@ -29,9 +36,10 @@ LogicalResult PexcsLut6Op::verify() {
   return success();
 }
 
-//===----------------------------------------------------------------------===//
-// Tablegen Generated Logic
-//===----------------------------------------------------------------------===//
-
-#define GET_OP_CLASSES
-#include "circt/Dialect/Pexcs/Pexcs.cpp.inc" 
+void PexcsDialect::registerOperations() {
+  // 注册操作
+  addOperations<
+#define GET_OP_LIST
+#include "circt/Dialect/Pexcs/Pexcs.cpp.inc"
+      >();
+}

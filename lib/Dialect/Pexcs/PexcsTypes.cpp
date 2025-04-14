@@ -11,6 +11,7 @@
 #include "circt/Dialect/Pexcs/PexcsDialect.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/DialectImplementation.h"
+#include "llvm/ADT/TypeSwitch.h"
 // clang-format on
 
 using namespace mlir;
@@ -18,62 +19,97 @@ using namespace circt;
 using namespace circt::pexcs;
 
 //===----------------------------------------------------------------------===//
-// PexcsOperandType 方法实现
+// 获取操作数空间的字符串表示
 //===----------------------------------------------------------------------===//
-
-// 从空间ID和地址构造16位操作数值
-static uint16_t packOperand(OperandSpace space, uint16_t addr) {
-  // 确保地址在13位范围内
-  addr &= OPERAND_ADDR_MASK;
-  // 将空间ID左移13位并与地址合并
-  return (static_cast<uint16_t>(space) << OPERAND_SPACE_SHIFT) | addr;
+StringRef circt::pexcs::getOperandSpaceName(OperandSpace space) {
+  switch (space) {
+  case OperandSpace::Immediate:
+    return "imm";
+  case OperandSpace::StateMemory:
+    return "state";
+  case OperandSpace::GlobalInputMemory:
+    return "global";
+  case OperandSpace::MemoryOutputReg:
+    return "memout";
+  case OperandSpace::PipelineBackend:
+    return "pipeline";
+  case OperandSpace::InterconnectNet:
+    return "net";
+  default:
+    return "unknown";
+  }
 }
 
-// 从16位操作数值中提取空间ID
-static OperandSpace unpackSpace(uint16_t value) {
-  return static_cast<OperandSpace>((value & OPERAND_SPACE_MASK) >> OPERAND_SPACE_SHIFT);
+//===----------------------------------------------------------------------===//
+// PXOperandType 字符串表示
+//===----------------------------------------------------------------------===//
+StringRef PXOperandType::getSpaceName() const {
+  return getOperandSpaceName(getSpace());
 }
 
-// 从16位操作数值中提取地址
-static uint16_t unpackAddr(uint16_t value) {
-  return value & OPERAND_ADDR_MASK;
+//===----------------------------------------------------------------------===//
+// 验证PXOperandType
+//===----------------------------------------------------------------------===//
+LogicalResult PXOperandType::verify(function_ref<InFlightDiagnostic()> emitError,
+                                  OperandSpace space, uint16_t address) {
+  // 验证操作数空间是否合法
+  if (space > OperandSpace::InterconnectNet) {
+    return emitError() << "invalid operand space: " << static_cast<int>(space) 
+                       << " (must be <= " << static_cast<int>(OperandSpace::InterconnectNet) << ")";
+  }
+  
+  // 验证地址是否在13位范围内
+  if (address > 0x1FFF) {
+    return emitError() << "operand address out of range (must be <= 8191): " << address;
+  }
+  
+  return success();
 }
 
-OperandType OperandType::get(MLIRContext *context) {
-  return Base::get(context);
-}
-
-// 创建立即数操作数
-uint16_t OperandType::createImmediate(uint16_t value) {
-  return packOperand(OperandSpace::Immediate, value);
-}
-
-// 创建内存访问操作数
-uint16_t OperandType::createMemoryAccess(OperandSpace space, uint16_t addr) {
-  if (space == OperandSpace::Immediate)
-    return createImmediate(addr);
-  return packOperand(space, addr);
-}
-
-// 获取操作数空间
-OperandSpace OperandType::getSpace(uint16_t value) {
-  return unpackSpace(value);
-}
-
-// 获取操作数地址或立即数值
-uint16_t OperandType::getAddress(uint16_t value) {
-  return unpackAddr(value);
-}
-
-// 判断操作数是否为立即数
-bool OperandType::isImmediate(uint16_t value) {
-  return getSpace(value) == OperandSpace::Immediate;
-}
+// 在命名空间 mlir 下为 OperandSpace 添加 FieldParser 特化
+namespace mlir {
+template <>
+struct FieldParser<circt::pexcs::OperandSpace> {
+  static FailureOr<circt::pexcs::OperandSpace> parse(AsmParser &p) {
+    // 解析标识符
+    StringRef name;
+    if (p.parseKeyword(&name))
+      return failure();
+    
+    // 将标识符转换为枚举值
+    if (name == "imm")
+      return circt::pexcs::OperandSpace::Immediate;
+    if (name == "state")
+      return circt::pexcs::OperandSpace::StateMemory;
+    if (name == "global")
+      return circt::pexcs::OperandSpace::GlobalInputMemory;
+    if (name == "memout")
+      return circt::pexcs::OperandSpace::MemoryOutputReg;
+    if (name == "pipeline")
+      return circt::pexcs::OperandSpace::PipelineBackend;
+    if (name == "net")
+      return circt::pexcs::OperandSpace::InterconnectNet;
+    
+    // 如果没有匹配项，报告错误
+    p.emitError(p.getCurrentLocation()) << "unknown operand space name: " << name;
+    return failure();
+  }
+};
+} // namespace mlir
 
 //===----------------------------------------------------------------------===//
 // Generated Logic
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ADT/TypeSwitch.h"
 #define GET_TYPEDEF_CLASSES
 #include "circt/Dialect/Pexcs/PexcsTypes.cpp.inc" 
+
+//===----------------------------------------------------------------------===//
+// 注册PexcsDialect的类型
+//===----------------------------------------------------------------------===//
+void PexcsDialect::registerTypes() {
+  addTypes<
+#define GET_TYPEDEF_LIST
+#include "circt/Dialect/Pexcs/PexcsTypes.cpp.inc"
+      >();
+}

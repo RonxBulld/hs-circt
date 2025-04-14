@@ -23,11 +23,8 @@ using namespace circt::pexcs;
 //===----------------------------------------------------------------------===//
 
 void PexcsDialect::initialize() {
-  // Register operations.
-  addOperations<
-#define GET_OP_LIST
-#include "circt/Dialect/Pexcs/Pexcs.cpp.inc"
-      >();
+  registerTypes();
+  registerOperations();
 }
 
 #include "circt/Dialect/Pexcs/PexcsDialect.cpp.inc" 
