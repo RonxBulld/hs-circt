@@ -19,6 +19,8 @@ include "circt/Dialect/Pexcs/PexcsTypes.td"
 // Base class for Pexcs operations
 class PexcsOp<string mnemonic, list<Trait> traits = []> : Op<PexcsDialect, mnemonic, traits>;
 
+
+
 //===----------------------------------------------------------------------===//
 // LUT Operations
 //===----------------------------------------------------------------------===//
@@ -27,7 +29,6 @@ class PexcsOp<string mnemonic, list<Trait> traits = []> : Op<PexcsDialect, mnemo
 class PexcsLutBase<string mnemonic, list<Trait> traits = []> : PexcsOp<mnemonic, !listconcat(traits, [])> {
   let summary = "Lookup table operation";
   let results = (outs I1:$result);
-  let hasVerifier = 1;
 }
 
 // Pexcs dialect currently supports LUT5 operation
@@ -42,7 +43,7 @@ def PexcsLut5Op : PexcsLutBase<"lut5"> {
   );
   let results = (outs I1:$result);
   let assemblyFormat = [{
-    `(` `I0:` $input0 `,` `I1:` $input1 `,` `I2:` $input2 `,` `I3:` $input3 `,` `I4:` $input4 `)`
+    `(` `I0` `:` $input0 `,` `I1` `:` $input1 `,` `I2` `:` $input2 `,` `I3` `:` $input3 `,` `I4` `:` $input4 `)`
     attr-dict `:`
     `(` type($input0) `,` type($input1) `,` type($input2) `,` type($input3) `,` type($input4) `)` `->` type($result)
     }];
@@ -67,7 +68,7 @@ def PexcsLut5Op : PexcsLutBase<"lut5"> {
     Example:
     ```mlir
     // 5-input LUT returning i1
-    %result = pexcs.lut5(I0: %a, I1: %b, I2: %c, I3: %d, I4: %e) {INIT = 4294967295 : ui32} : (i1, i1, i1, i1, i1) -> i1
+    %result = pexcs.lut5(I0 : %a, I1 : %b, I2 : %c, I3 : %d, I4 : %e) {INIT = 4294967295 : ui32} : (i1, i1, i1, i1, i1) -> i1
     ```
   }];
 }
@@ -89,7 +90,7 @@ def PexcsCevOp : PexcsOp<"cev"> {
     
     Example:
     ```mlir
-    %result = pexcs.cev(CP: %clockPrev, CC: %clockCurr) : i1, i1 -> i1
+    %result = pexcs.cev(CP : %clockPrev, CC : %clockCurr) : i1, i1 -> i1
     ```
   }];
   
@@ -103,7 +104,7 @@ def PexcsCevOp : PexcsOp<"cev"> {
   );
   
   let assemblyFormat = [{
-    `(` `CP:` $clockPrev `,` `CC:` $clockCurr `)`
+    `(` `CP` `:` $clockPrev `,` `CC` `:` $clockCurr `)`
     attr-dict `:` type($clockPrev) `,` type($clockCurr) `->` type($evalResult)
   }];
 }
@@ -112,7 +113,7 @@ def PexcsCevOp : PexcsOp<"cev"> {
 // Clock Update Operation
 //===----------------------------------------------------------------------===//
 
-def PexcsCuvOp : PexcsOp<"cuv", [MemoryEffects::Write]> {
+def PexcsCuvOp : PexcsOp<"cuv", [MemoryEffects<[MemWrite]>]> {
   let summary = "Clock update operation (operates on locations)";
   let description = [{
     时钟更新指令 (Clock Update) 用于将时钟现值更新到时钟前值地址。
@@ -137,7 +138,7 @@ def PexcsCuvOp : PexcsOp<"cuv", [MemoryEffects::Write]> {
 
     Example:
     ```mlir
-    pexcs.cuv(CA: %currAddr, PA: %prevAddr) : operand, operand
+    pexcs.cuv(CA : %currAddr, PA : %prevAddr) : operand, operand
     ```
   }];
 
@@ -148,7 +149,7 @@ def PexcsCuvOp : PexcsOp<"cuv", [MemoryEffects::Write]> {
   // No explicit results (outs), operation returns void and has side effects.
 
   let assemblyFormat = [{
-    `(` `CA:` $clockCurrAddr `,` `PA:` $clockPrevAddr `)`
+    `(` `CA` `:` $clockCurrAddr `,` `PA` `:` $clockPrevAddr `)`
     attr-dict `:` type($clockCurrAddr) `,` type($clockPrevAddr)
   }];
 }
@@ -157,7 +158,7 @@ def PexcsCuvOp : PexcsOp<"cuv", [MemoryEffects::Write]> {
 // Memory Evaluation Operation
 //===----------------------------------------------------------------------===//
 
-def PexcsRAML512X8DOp : PexcsOp<"raml512x8d", [MemoryEffects::Read, MemoryEffects::Write]> {
+def PexcsRAML512X8DOp : PexcsOp<"raml512x8d", [MemoryEffects<[MemRead, MemWrite]>]> {
   let summary = "512x8 双端口 RAM 操作";
   let description = [{
     表示一个 512x8 的双端口 RAM。它有独立的读写端口。
@@ -177,7 +178,7 @@ def PexcsRAML512X8DOp : PexcsOp<"raml512x8d", [MemoryEffects::Read, MemoryEffect
 
     Example:
     ```mlir
-    %rdData, %wdOut = pexcs.raml512x8d(WD: %wrData, WA: %wrAddr, WE: %wrEn, C: %clk, RA: %rdAddr) : i8, i16, i1, i1, i16 -> i8, i8
+    %rdData, %wdOut = pexcs.raml512x8d(WD : %wrData, WA : %wrAddr, WE : %wrEn, C : %clk, RA : %rdAddr) : i8, i16, i1, i1, i16 -> i8, i8
     ```
   }];
 
@@ -195,7 +196,7 @@ def PexcsRAML512X8DOp : PexcsOp<"raml512x8d", [MemoryEffects::Read, MemoryEffect
   );
 
   let assemblyFormat = [{
-    `(` `WD:` $writeData `,` `WA:` $writeAddr `,` `WE:` $writeEnable `,` `C:` $clockEvent `,` `RA:` $readAddr `)`
+    `(` `WD` `:` $writeData `,` `WA` `:` $writeAddr `,` `WE` `:` $writeEnable `,` `C` `:` $clockEvent `,` `RA` `:` $readAddr `)`
     attr-dict `:` 
     type($writeData) `,` type($writeAddr) `,` type($writeEnable) `,` type($clockEvent) `,` type($readAddr) 
     `->` type($readData) `,` type($writeDataOut)

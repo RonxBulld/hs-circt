@@ -14,6 +14,8 @@ add_circt_dialect(${DIALECT_NAME} ${DIALECT_NAMESPACE})
 add_circt_doc(${DIALECT_NAME}Dialect ${DIALECT_NAME}Dialect ${DIALECT_DIR}/ -gen-dialect-doc)
 add_circt_doc(${DIALECT_NAME} ${DIALECT_NAME} ${DIALECT_DIR}/ -gen-op-doc)
 
+
+
 # Generate dialect enums
 set(LLVM_TARGET_DEFINITIONS ${CMAKE_CURRENT_LIST_DIR}/${DIALECT_NAME}.td)
 mlir_tablegen(${DIALECT_INC_GEN_PREFIX}Enums.h.inc -gen-enum-decls)
@@ -28,6 +30,8 @@ mlir_tablegen(${DIALECT_INC_GEN_PREFIX}Attributes.cpp.inc -gen-attrdef-defs -att
 add_public_tablegen_target(${DIALECT_INC_GEN_PREFIX}AttributesIncGen)
 add_dependencies(circt-headers ${DIALECT_INC_GEN_PREFIX}AttributesIncGen)
 list(APPEND PEXCS_INC_GEN_DEPS ${DIALECT_INC_GEN_PREFIX}AttributesIncGen)
+
+
 
 # Generate dialect operations
 set(LLVM_TARGET_DEFINITIONS ${DIALECT_NAME}Ops.td)
