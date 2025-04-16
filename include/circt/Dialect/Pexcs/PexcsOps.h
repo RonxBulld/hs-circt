@@ -17,6 +17,7 @@
 #include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/IR/ValueRange.h"
 #include "circt/Dialect/Pexcs/PexcsTypes.h"
+#include "circt/Dialect/Pexcs/PexcsTraits.h"
 
 #define GET_OP_CLASSES
 #include "circt/Dialect/Pexcs/Pexcs.h.inc"
