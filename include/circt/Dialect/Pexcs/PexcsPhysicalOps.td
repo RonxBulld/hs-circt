@@ -9,6 +9,8 @@
 #ifndef CIRCT_DIALECT_PEXCS_PEXCSPHYSICALOPS_TD
 #define CIRCT_DIALECT_PEXCS_PEXCSPHYSICALOPS_TD
 
+include "circt/Dialect/Pexcs/PexcsBaseOps.td"
+
 // include "PexcsOpsBase.td" // Base class is defined in PexcsOps.td which includes this file.
 include "mlir/Interfaces/SideEffectInterfaces.td"
 

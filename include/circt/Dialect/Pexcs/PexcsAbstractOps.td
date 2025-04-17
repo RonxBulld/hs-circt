@@ -9,7 +9,7 @@
 #ifndef CIRCT_DIALECT_PEXCS_PEXCSABSTRACTOPS_TD
 #define CIRCT_DIALECT_PEXCS_PEXCSABSTRACTOPS_TD
 
-// include "PexcsOpsBase.td" // Base class is defined in PexcsOps.td which includes this file.
+include "circt/Dialect/Pexcs/PexcsBaseOps.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
 //===----------------------------------------------------------------------===//
@@ -114,4 +114,124 @@ def PexcsRAML512X8DOp : PexcsOp<"raml512x8d", [AbstractLevel, MemoryEffects<[Mem
   }];
 }
 
-#endif // CIRCT_DIALECT_PEXCS_PEXCSABSTRACTOPS_TD 
+//===----------------------------------------------------------------------===//
+// Flip-Flop Operations
+//===----------------------------------------------------------------------===//
+
+// Synchronous Set D Flip-Flop with Clock Enable
+def PexcsSDFFSEOp : PexcsOp<"sdffse", [AbstractLevel]> {
+  let arguments = (ins
+    UI1Attr:$INIT, // Initial value
+    I1:$dataInput,    // Data input
+    I1:$clock,    // Clock
+    I1:$clockEnable,   // Clock enable
+    I1:$preSet   // Synchronous preset
+  );
+  let results = (outs I1:$Q);
+
+  let assemblyFormat = [{
+    `(` `D` `:` $dataInput `,` `C` `:` $clock `,` `CE` `:` $clockEnable `,` `PRE` `:` $preSet `)`
+    attr-dict `:` type($dataInput) `,` type($Q) `,` type($clock) `,` type($clockEnable) `,` type($preSet)
+  }];
+
+  let description = [{
+    Synchronous Set D Flip-Flop with Clock Enable.
+
+    Ports:
+    - D: Data input
+    - Q: Data output
+    - C: Clock input
+    - CE: Clock enable
+    - PRE: Synchronous preset
+    - INIT: Initial value attribute
+  }];
+}
+
+// Synchronous Reset D Flip-Flop with Clock Enable
+def PexcsSDFFREOp : PexcsOp<"sdffre", [AbstractLevel]> {
+  let arguments = (ins
+    UI1Attr:$INIT, // Initial value
+    I1:$dataInput,    // Data input
+    I1:$clock,    // Clock
+    I1:$clockEnable,   // Clock enable
+    I1:$clear   // Synchronous clear
+  );
+  let results = (outs I1:$Q);
+
+  let assemblyFormat = [{
+    `(` `D` `:` $dataInput `,` `C` `:` $clock `,` `CE` `:` $clockEnable `,` `CLR` `:` $clear `)`
+    attr-dict `:` type($dataInput) `,` type($Q) `,` type($clock) `,` type($clockEnable) `,` type($clear)
+  }];
+
+  let description = [{
+    Synchronous Reset D Flip-Flop with Clock Enable.
+
+    Ports:
+    - D: Data input
+    - Q: Data output
+    - C: Clock input
+    - CE: Clock enable
+    - CLR: Synchronous clear
+    - INIT: Initial value attribute
+  }];
+}
+
+// Asynchronous Set D Flip-Flop with Clock Enable
+def PexcsADFFSEOp : PexcsOp<"adffse", [AbstractLevel]> {
+  let arguments = (ins
+    UI1Attr:$INIT, // Initial value
+    I1:$dataInput,    // Data input
+    I1:$clock,    // Clock
+    I1:$clockEnable,   // Clock enable
+    I1:$preSet   // Asynchronous preset
+  );
+  let results = (outs I1:$Q);
+
+  let assemblyFormat = [{
+    `(` `D` `:` $dataInput `,` `C` `:` $clock `,` `CE` `:` $clockEnable `,` `PRE` `:` $preSet `)`
+    attr-dict `:` type($dataInput) `,` type($Q) `,` type($clock) `,` type($clockEnable) `,` type($preSet)
+  }];
+
+  let description = [{
+    Asynchronous Set D Flip-Flop with Clock Enable.
+
+    Ports:
+    - D: Data input
+    - Q: Data output
+    - C: Clock input
+    - CE: Clock enable
+    - PRE: Asynchronous preset
+    - INIT: Initial value attribute
+  }];
+}
+
+// Asynchronous Reset D Flip-Flop with Clock Enable
+def PexcsADFFREOp : PexcsOp<"adffre", [AbstractLevel]> {
+  let arguments = (ins
+    UI1Attr:$INIT, // Initial value
+    I1:$dataInput,    // Data input
+    I1:$clock,    // Clock
+    I1:$clockEnable,   // Clock enable
+    I1:$clear   // Asynchronous clear
+  );
+  let results = (outs I1:$Q);
+
+  let assemblyFormat = [{
+    `(` `D` `:` $dataInput `,` `C` `:` $clock `,` `CE` `:` $clockEnable `,` `CLR` `:` $clear `)`
+    attr-dict `:` type($dataInput) `,` type($Q) `,` type($clock) `,` type($clockEnable) `,` type($clear)
+  }];
+
+  let description = [{
+    Asynchronous Reset D Flip-Flop with Clock Enable.
+
+    Ports:
+    - D: Data input
+    - Q: Data output
+    - C: Clock input
+    - CE: Clock enable
+    - CLR: Asynchronous clear
+    - INIT: Initial value attribute
+  }];
+}
+
+#endif // CIRCT_DIALECT_PEXCS_PEXCSABSTRACTOPS_TD
