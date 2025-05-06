@@ -13,13 +13,14 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 
+#include "circt/Dialect/Xlnx/XlnxEnums.h.inc"
+
 #define GET_TYPEDEF_CLASSES
 #include "circt/Dialect/Xlnx/XlnxTypes.h.inc"
 // clang-format on
 
 namespace circt {
 namespace xlnx {
-
 template <typename ConcreteType>
 class AsynchronousControl
     : public mlir::OpTrait::TraitBase<ConcreteType, AsynchronousControl> {

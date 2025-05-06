@@ -32,13 +32,44 @@ using namespace hw;
 using namespace xlnx;
 
 namespace {
+
+struct ValidatedExternModuleCache {
+  std::optional<circt::hw::HWModuleExternOp>
+      validatedModules[::circt::xlnx::getMaxEnumValForGateType() + 1];
+
+  ValidatedExternModuleCache() {
+    for (auto &module : validatedModules) {
+      module = std::nullopt;
+    }
+  }
+
+  bool contains(circt::xlnx::GateType gateType) const {
+    return validatedModules[static_cast<uint32_t>(gateType)].has_value();
+  }
+
+  circt::hw::HWModuleExternOp get(circt::xlnx::GateType gateType) const {
+    return validatedModules[static_cast<uint32_t>(gateType)].value();
+  }
+
+  void insert(circt::xlnx::GateType gateType,
+              circt::hw::HWModuleExternOp module) {
+    validatedModules[static_cast<uint32_t>(gateType)] = module;
+  }
+
+  void clear() {
+    for (auto &module : validatedModules) {
+      module = std::nullopt;
+    }
+  }
+};
+
 struct XlnxOpToHWInstLowering
     : public OpInterfaceConversionPattern<xlnx::HWInstable> {
   using OpInterfaceConversionPattern::OpInterfaceConversionPattern;
 
   XlnxOpToHWInstLowering(MLIRContext *context)
-      : OpInterfaceConversionPattern<xlnx::HWInstable>(context, /*benefit=*/1) {
-  }
+      : OpInterfaceConversionPattern<xlnx::HWInstable>(context,
+                                                       /*benefit=*/1) {}
 
 private:
   /**
@@ -169,28 +200,37 @@ private:
    *    signature mismatches:**
    *    The function will emit an error and return `Failure`.
    */
-  FailureOr<hw::HWModuleExternOp> getOrCreateExternModule(
-      xlnx::HWInstable op, ConversionPatternRewriter &rewriter,
-      StringRef gateType, ArrayRef<hw::PortInfo> modulePorts) const {
+  FailureOr<hw::HWModuleExternOp>
+  getOrCreateExternModule(xlnx::HWInstable op,
+                          ConversionPatternRewriter &rewriter,
+                          circt::xlnx::GateType gateType,
+                          ArrayRef<hw::PortInfo> modulePorts) const {
 
     ModuleOp parentModule = op->getParentOfType<ModuleOp>();
-    MLIRContext *context = op->getContext();
     Location loc = op->getLoc();
 
-    // Search for existing extern module
+    llvm::StringRef gateTypeStr = circt::xlnx::stringifyGateType(gateType);
     auto externModule =
-        parentModule.lookupSymbol<hw::HWModuleExternOp>(gateType);
+        parentModule.lookupSymbol<hw::HWModuleExternOp>(gateTypeStr);
+
+    // Check cache first, if found, verify extern module simply and return.
+    if (validatedExternModuleCache.contains(gateType)) {
+      auto cachedExternModule = validatedExternModuleCache.get(gateType);
+      assert(cachedExternModule && "Cached extern module should exist");
+      return cachedExternModule;
+    }
+
     if (externModule) {
-      // Validate signature of existing module
+      // Validate signature of existing module (only if not cached)
 
       // Validate the ports
 
       auto existingPorts = externModule.getPortList();
       if (existingPorts.size() != modulePorts.size()) {
-        auto errorMsg =
-            llvm::formatv("Found existing extern module '{0}' but port count "
-                          "mismatch (expected {1}, found {2})",
-                          gateType, modulePorts.size(), existingPorts.size());
+        auto errorMsg = llvm::formatv(
+            "Found existing extern module '{0}' but port count "
+            "mismatch (expected {1}, found {2})",
+            gateTypeStr, modulePorts.size(), existingPorts.size());
         op.emitError(errorMsg);
         return failure();
       }
@@ -203,7 +243,7 @@ private:
               "Found existing extern module '{0}' but port signature mismatch "
               "at index {1}: expected ('{2}', {3}, {4}), found ('{5}', {6}, "
               "{7})",
-              gateType, i,
+              gateTypeStr, i,
               // Expected
               modulePorts[i].name.getValue(), modulePorts[i].type,
               getDirectionString(modulePorts[i].dir),
@@ -223,7 +263,7 @@ private:
         auto errorMsg = llvm::formatv(
             "Found existing extern module '{0}' but parameter count mismatch "
             "(expected {1}, found {2})",
-            gateType, expectedParams.size(), foundParams.size());
+            gateTypeStr, expectedParams.size(), foundParams.size());
         op.emitError(errorMsg);
         return failure();
       }
@@ -233,7 +273,7 @@ private:
           auto errorMsg = llvm::formatv(
               "Found existing extern module '{0}' but parameter mismatch at "
               "index {1}: expected ('{2}', {3}), found ('{4}', {5})",
-              gateType, i, expectedParams[i], foundParams[i]);
+              gateTypeStr, i, expectedParams[i], foundParams[i]);
           op.emitError(errorMsg);
           return failure();
         }
@@ -242,10 +282,13 @@ private:
       // Create new extern module if not found
       OpBuilder::InsertionGuard guard(rewriter);
       rewriter.setInsertionPointToStart(parentModule.getBody());
-      externModule = rewriter.create<hw::HWModuleExternOp>(
-          loc, StringAttr::get(context, gateType), modulePorts);
+      mlir::StringAttr gateTypeAttr =
+          mlir::StringAttr::get(op->getContext(), gateTypeStr);
+      externModule =
+          rewriter.create<hw::HWModuleExternOp>(loc, gateTypeAttr, modulePorts);
       externModule->setAttr("parameters", getParameters(op, rewriter, true));
     }
+    validatedExternModuleCache.insert(gateType, externModule);
     return externModule;
   }
 
@@ -343,7 +386,7 @@ public:
 
     Location loc = op->getLoc();
     // Store the gate type in a std::string to avoid dangling reference
-    std::string gateType = op.getGateType();
+    circt::xlnx::GateType gateType = op.getGateType();
     SmallVector<hw::PortInfo> modulePorts;
     SmallVector<Value> instanceInputs;
 
@@ -376,6 +419,8 @@ public:
 
     return success();
   }
+
+  mutable ValidatedExternModuleCache validatedExternModuleCache;
 };
 
 struct XlnxToHWPass : public circt::impl::ConvertXlnxToHWBase<XlnxToHWPass> {

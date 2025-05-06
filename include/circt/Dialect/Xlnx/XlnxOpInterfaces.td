@@ -35,8 +35,8 @@ def HWInstable : OpInterface<"HWInstable"> {
 
   let methods = [
     InterfaceMethod<
-      "Get the gate type",
-      "std::string",
+      "Get the gate type enum",
+      "circt::xlnx::GateType",
       "getGateType"
     >,
     InterfaceMethod<

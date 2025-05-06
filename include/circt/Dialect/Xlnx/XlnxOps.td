@@ -26,7 +26,7 @@ include "circt/Dialect/Xlnx/XlnxTypes.td"
 // Base class for Xlnx operations
 class XlnxOp<string mnemonic, list<Trait> traits = []> : Op<XlnxDialect, mnemonic, !listconcat(traits, [HWInstable])> {
   let extraClassDeclaration = [{
-    std::string getGateType();
+    circt::xlnx::GateType getGateType();
     llvm::StringMap<mlir::Value> getPortDict();
     
     template <typename A> struct MakeTypedAttr {
@@ -98,8 +98,16 @@ def XlnxLutNOp : XlnxLutBase<"lutn"> {
   let arguments = (ins UI64Attr:$INIT, Variadic<I1>:$inputs);
   let assemblyFormat = "`(` $inputs `)` attr-dict `:` functional-type($inputs, $result)";
   let extraClassDefinition = [{
-    std::string XlnxLutNOp::getGateType() {
-      return std::string("LUT") + std::to_string(getNumOperands());
+    circt::xlnx::GateType XlnxLutNOp::getGateType() {
+      switch (getNumOperands()) {
+        case 1: return circt::xlnx::GateType::LUT1;
+        case 2: return circt::xlnx::GateType::LUT2;
+        case 3: return circt::xlnx::GateType::LUT3;
+        case 4: return circt::xlnx::GateType::LUT4;
+        case 5: return circt::xlnx::GateType::LUT5;
+        case 6: return circt::xlnx::GateType::LUT6;
+        default: llvm_unreachable("Invalid number of inputs for LUT operation");
+      }
     }
     llvm::StringMap<mlir::Value> XlnxLutNOp::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -129,8 +137,8 @@ def XlnxLut1Op : XlnxLutBase<"lut1"> {
   // }];
 
   let extraClassDefinition = [{
-    std::string XlnxLut1Op::getGateType() {
-      return "LUT1";
+    circt::xlnx::GateType XlnxLut1Op::getGateType() {
+      return circt::xlnx::GateType::LUT1;
     }
     llvm::StringMap<mlir::Value> XlnxLut1Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -152,8 +160,8 @@ def XlnxLut2Op : XlnxLutBase<"lut2"> {
   let arguments = (ins UI4Attr:$INIT, I1:$input0, I1:$input1);
   let assemblyFormat = "`(` `I0` `:` $input0 `,` `I1` `:` $input1 `)` attr-dict `:` type($input0) `,` type($input1) `->` type($result)";
   let extraClassDefinition = [{
-    std::string XlnxLut2Op::getGateType() {
-      return "LUT2";
+    circt::xlnx::GateType XlnxLut2Op::getGateType() {
+      return circt::xlnx::GateType::LUT2;
     }
     llvm::StringMap<mlir::Value> XlnxLut2Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -176,8 +184,8 @@ def XlnxLut3Op : XlnxLutBase<"lut3"> {
   let arguments = (ins UI8Attr:$INIT, I1:$input0, I1:$input1, I1:$input2);
   let assemblyFormat = "`(` `I0` `:` $input0 `,` `I1` `:` $input1 `,` `I2` `:` $input2 `)` attr-dict `:` type($input0) `,` type($input1) `,` type($input2) `->` type($result)";
   let extraClassDefinition = [{
-    std::string XlnxLut3Op::getGateType() {
-      return "LUT3";
+    circt::xlnx::GateType XlnxLut3Op::getGateType() {
+      return circt::xlnx::GateType::LUT3;
     }
     llvm::StringMap<mlir::Value> XlnxLut3Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -201,8 +209,8 @@ def XlnxLut4Op : XlnxLutBase<"lut4"> {
   let arguments = (ins UI16Attr:$INIT, I1:$input0, I1:$input1, I1:$input2, I1:$input3);
   let assemblyFormat = "`(` `I0` `:` $input0 `,` `I1` `:` $input1 `,` `I2` `:` $input2 `,` `I3` `:` $input3 `)` attr-dict `:` type($input0) `,` type($input1) `,` type($input2) `,` type($input3) `->` type($result)";
   let extraClassDefinition = [{
-    std::string XlnxLut4Op::getGateType() {
-      return "LUT4";
+    circt::xlnx::GateType XlnxLut4Op::getGateType() {
+      return circt::xlnx::GateType::LUT4;
     }
     llvm::StringMap<mlir::Value> XlnxLut4Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -227,8 +235,8 @@ def XlnxLut5Op : XlnxLutBase<"lut5"> {
   let arguments = (ins UI32Attr:$INIT, I1:$input0, I1:$input1, I1:$input2, I1:$input3, I1:$input4);
   let assemblyFormat = "`(` `I0` `:` $input0 `,` `I1` `:` $input1 `,` `I2` `:` $input2 `,` `I3` `:` $input3 `,` `I4` `:` $input4 `)` attr-dict `:` type($input0) `,` type($input1) `,` type($input2) `,` type($input3) `,` type($input4) `->` type($result)";
   let extraClassDefinition = [{
-    std::string XlnxLut5Op::getGateType() {
-      return "LUT5";
+    circt::xlnx::GateType XlnxLut5Op::getGateType() {
+      return circt::xlnx::GateType::LUT5;
     }
     llvm::StringMap<mlir::Value> XlnxLut5Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -254,8 +262,8 @@ def XlnxLut6Op : XlnxLutBase<"lut6"> {
   let arguments = (ins UI64Attr:$INIT, I1:$input0, I1:$input1, I1:$input2, I1:$input3, I1:$input4, I1:$input5);
   let assemblyFormat = "`(` `I0` `:` $input0 `,` `I1` `:` $input1 `,` `I2` `:` $input2 `,` `I3` `:` $input3 `,` `I4` `:` $input4 `,` `I5` `:` $input5 `)` attr-dict `:` type($input0) `,` type($input1) `,` type($input2) `,` type($input3) `,` type($input4) `,` type($input5) `->` type($result)";
   let extraClassDefinition = [{
-    std::string XlnxLut6Op::getGateType() {
-      return "LUT6";
+    circt::xlnx::GateType XlnxLut6Op::getGateType() {
+      return circt::xlnx::GateType::LUT6;
     }
     llvm::StringMap<mlir::Value> XlnxLut6Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -311,8 +319,8 @@ def XlnxMuxF7Op : XlnxMuxBase<"muxf7"> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxMuxF7Op::getGateType() {
-      return "MUXF7";
+    circt::xlnx::GateType XlnxMuxF7Op::getGateType() {
+      return circt::xlnx::GateType::MUXF7;
     }
     llvm::StringMap<mlir::Value> XlnxMuxF7Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -343,8 +351,8 @@ def XlnxMuxF8Op : XlnxMuxBase<"muxf8"> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxMuxF8Op::getGateType() {
-      return "MUXF8";
+    circt::xlnx::GateType XlnxMuxF8Op::getGateType() {
+      return circt::xlnx::GateType::MUXF8;
     }
     llvm::StringMap<mlir::Value> XlnxMuxF8Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -375,8 +383,8 @@ def XlnxMuxF9Op : XlnxMuxBase<"muxf9"> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxMuxF9Op::getGateType() {
-      return "MUXF9";
+    circt::xlnx::GateType XlnxMuxF9Op::getGateType() {
+      return circt::xlnx::GateType::MUXF9;
     }
     llvm::StringMap<mlir::Value> XlnxMuxF9Op::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -464,8 +472,8 @@ def XlnxFDCEOp : XlnxFDCtrlBase<"fdce", [AsynchronousControl]> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxFDCEOp::getGateType() {
-      return "FDCE";
+    circt::xlnx::GateType XlnxFDCEOp::getGateType() {
+      return circt::xlnx::GateType::FDCE;
     }
     llvm::StringMap<mlir::Value> XlnxFDCEOp::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -534,8 +542,8 @@ def XlnxFDPEOp : XlnxFDCtrlBase<"fdpe", [AsynchronousControl]> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxFDPEOp::getGateType() {
-      return "FDPE";
+    circt::xlnx::GateType XlnxFDPEOp::getGateType() {
+      return circt::xlnx::GateType::FDPE;
     }
     llvm::StringMap<mlir::Value> XlnxFDPEOp::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -604,8 +612,8 @@ def XlnxFDREOp : XlnxFDCtrlBase<"fdre", [SynchronousControl]> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxFDREOp::getGateType() {
-      return "FDRE";
+    circt::xlnx::GateType XlnxFDREOp::getGateType() {
+      return circt::xlnx::GateType::FDRE;
     }
     llvm::StringMap<mlir::Value> XlnxFDREOp::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
@@ -674,8 +682,8 @@ def XlnxFDSEOp : XlnxFDCtrlBase<"fdse", [SynchronousControl]> {
   }];
 
   let extraClassDefinition = [{
-    std::string XlnxFDSEOp::getGateType() {
-      return "FDSE";
+    circt::xlnx::GateType XlnxFDSEOp::getGateType() {
+      return circt::xlnx::GateType::FDSE;
     }
     llvm::StringMap<mlir::Value> XlnxFDSEOp::getPortDict() {
       llvm::StringMap<mlir::Value> ports;
