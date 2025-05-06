@@ -1,5 +1,4 @@
 // RUN: circt-opt %s --convert-seq-to-xlnx --convert-xlnx-to-hw --split-input-file --verify-diagnostics | firtool -format=mlir - | FileCheck %s
-// REQUIRES: iverilog
 // RUN: bash %S/difftest.sh -f %s -m RegAndLut
 
 module {
