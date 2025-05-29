@@ -44,18 +44,6 @@ def PexcsLut5Op : PexcsLutBase<"lut5", [AbstractLevel, CalculateLevel]> {
     the lookup table contents as a 32-bit integer where each bit represents the output
     value for the corresponding input pattern.
 
-    每个输入操作数是一个16位的结构化操作数，其中：
-    - 高3bit表示寻址目标空间
-    - 低13bit表示立即数或者寻址的地址
-
-    操作数空间定义：
-    - 0: 立即数
-    - 1: 设计状态存储器空间
-    - 2: 全局输入存储器空间
-    - 3: 内存输出寄存器空间
-    - 4: 流水线后端单元空间
-    - 5: 互联网络空间
-
     Example:
     ```mlir
     // 5-input LUT returning i1
@@ -63,7 +51,6 @@ def PexcsLut5Op : PexcsLutBase<"lut5", [AbstractLevel, CalculateLevel]> {
     ```
   }];
 }
-
 
 //===----------------------------------------------------------------------===//
 // Memory Evaluation Operation
@@ -111,6 +98,47 @@ def PexcsRAML512X8DOp : PexcsOp<"raml512x8d", [AbstractLevel, MemoryEffects<[Mem
     attr-dict `:`
     type($writeData) `,` type($writeAddr) `,` type($writeEnable) `,` type($clockEvent) `,` type($readAddr)
     `->` type($readData) `,` type($writeDataOut)
+  }];
+}
+
+def PexcsRAML512X8SOp : PexcsOp<"raml512x8s", [AbstractLevel, MemoryEffects<[MemRead, MemWrite]>]> {
+  let summary = "512x8 单端口 RAM 操作";
+  let description = [{
+    表示一个 512x8 的单端口 RAM。它共用读写地址，一次操作只能读或写。
+
+    Inputs:
+    1. data (i8) - 写入数据
+    2. addr (i16) - 读写地址 (使用 i16 表示 9 位地址)
+    3. writeEnable (i1) - 写使能信号，1表示写操作，0表示读操作
+    4. clockEvent (i1) - 时钟事件信号 (用于同步写操作)
+
+    Outputs:
+    1. dataOut (i8) - 读取的数据或写入数据的回显
+
+    该操作具有读写内存的副作用。
+
+    Example:
+    ```mlir
+    %dataOut = pexcs.raml512x8s(D : %data, A : %addr, WE : %wrEn, C : %clk) : i8, i16, i1, i1 -> i8
+    ```
+  }];
+
+  let arguments = (ins
+    I8:$data,         // 8位数据输入
+    I16:$addr,        // 9位地址 (用 I16)
+    I1:$writeEnable,  // 1位写使能
+    I1:$clockEvent    // 1位时钟事件
+  );
+
+  let results = (outs
+    I8:$dataOut       // 8位数据输出
+  );
+
+  let assemblyFormat = [{
+    `(` `D` `:` $data `,` `A` `:` $addr `,` `WE` `:` $writeEnable `,` `C` `:` $clockEvent `)`
+    attr-dict `:`
+    type($data) `,` type($addr) `,` type($writeEnable) `,` type($clockEvent)
+    `->` type($dataOut)
   }];
 }
 
@@ -231,6 +259,76 @@ def PexcsADFFREOp : PexcsOp<"adffre", [AbstractLevel]> {
     - CE: Clock enable
     - CLR: Asynchronous clear
     - INIT: Initial value attribute
+  }];
+}
+
+//===----------------------------------------------------------------------===//
+// INV and ZBUF Operations
+//===----------------------------------------------------------------------===//
+
+// Inverter (NOT gate) Operation
+def PexcsINVOp : PexcsOp<"inv", [AbstractLevel, CalculateLevel]> {
+  let summary = "逆变器操作 (NOT Gate)";
+  
+  let arguments = (ins
+    I1:$input  // 输入信号
+  );
+  
+  let results = (outs 
+    I1:$output // 输出信号
+  );
+
+  let assemblyFormat = [{
+    `(` `IN` `:` $input `)`
+    attr-dict `:` type($input) `->` type($output)
+  }];
+
+  let description = [{
+    逆变器/非门操作。将输入信号取反。
+
+    Ports:
+    - IN: 输入信号
+    - 输出: 输入信号的取反
+
+    Example:
+    ```mlir
+    %result = pexcs.inv(IN : %a) : i1 -> i1
+    ```
+
+    注意：虽然此操作可以通过LUT5实现，但为了清晰和直观，单独提供逆变器操作。
+  }];
+}
+
+// Zero Buffer Operation
+def PexcsZBUFOp : PexcsOp<"zbuf", [AbstractLevel, CalculateLevel]> {
+  let summary = "零缓冲器操作";
+  
+  let arguments = (ins
+    I1:$input  // 输入信号
+  );
+  
+  let results = (outs 
+    I1:$output // 输出信号
+  );
+
+  let assemblyFormat = [{
+    `(` `IN` `:` $input `)`
+    attr-dict `:` type($input) `->` type($output)
+  }];
+
+  let description = [{
+    零缓冲器操作。不改变输入信号，起到缓冲作用。
+
+    Ports:
+    - IN: 输入信号
+    - 输出: 与输入信号相同
+
+    Example:
+    ```mlir
+    %result = pexcs.zbuf(IN : %a) : i1 -> i1
+    ```
+
+    注意：虽然此操作可以通过LUT5实现，但为了清晰和直观，单独提供缓冲器操作。
   }];
 }
 

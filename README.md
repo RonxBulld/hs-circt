@@ -91,6 +91,8 @@ $ cd circt
 $ mkdir llvm/build
 $ cd llvm/build
 $ cmake -G Ninja ../llvm \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
     -DLLVM_ENABLE_PROJECTS="mlir" \
     -DLLVM_TARGETS_TO_BUILD="host" \
     -DLLVM_ENABLE_ASSERTIONS=ON \

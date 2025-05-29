@@ -10,6 +10,7 @@
 #define CIRCT_DIALECT_PEXCS_PEXCS_TD
 
 include "mlir/Interfaces/SideEffectInterfaces.td"
+
 include "circt/Dialect/Pexcs/PexcsDialect.td"
 include "circt/Dialect/Pexcs/PexcsOps.td"
 include "circt/Dialect/Pexcs/PexcsTypes.td"
