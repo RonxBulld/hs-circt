@@ -47,7 +47,7 @@
 #include "circt/Dialect/Sim/SimDialect.h"
 #include "circt/Dialect/SystemC/SystemCDialect.h"
 #include "circt/Dialect/Verif/VerifDialect.h"
-#include "circt/Dialect/Xlnx/PexcsDialect.h"
+#include "circt/Dialect/Pexcs/PexcsDialect.h"
 #include "mlir/Dialect/SMT/IR/SMTDialect.h"
 #include "mlir/IR/Dialect.h"
 
